@@ -116,10 +116,17 @@ int main(int argc, char** argv) {
     // Broadcast the decryption key from Node 0 to all other nodes
     MPI_Bcast(&key, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // Read the entire file on Node 
+    //Barrier to synchronize processes
+    MPI_Barrier(MPI_COMM_WORLD);
+
+
+    // Read the file on npode 0 
     if (world_rank == 0) {
         createData(world_rank);
     }
+
+    //Barrier to synchronize processes
+     MPI_Barrier(MPI_COMM_WORLD);
 
  
 
@@ -134,12 +141,18 @@ int main(int argc, char** argv) {
    
     std::cout << " " << std::endl;
 
+    //Barrier to synchronize processes
+    MPI_Barrier(MPI_COMM_WORLD);
+
+
     // Count occurrences of "DISTRIBUTED" in the decipheredArray
     const char* searchString = "DISTRIBUTED";
     int hits = searchText(decipheredArray, chunkSize, searchString);
     std::cout << "Instances of  " << searchString << " found in node " << world_rank  << " is " << hits << std::endl;
 
      std::cout << " " << std::endl;
+
+     MPI_Barrier(MPI_COMM_WORLD);
     //initialize totalhits
     int totalhits = 0;
 
@@ -167,6 +180,9 @@ int main(int argc, char** argv) {
 
     if (world_rank == 0) {
         // Output the reconstructed array for Node 0
+
+        std::cout << " " << std::endl;
+
         std::cout << "Node " << world_rank << "'s reconstructed array: " << partialDecryptedArray << std::endl;
 
         std::cout << " " << std::endl;
