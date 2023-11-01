@@ -1,6 +1,6 @@
 // Distributed Systems - 2023
 // Assignment 2 - template
-// TODO: Student Name - Student Number
+// TODO: Divine Eboigbe - 3046155
 
 #include <iostream>
 #include <fstream>
@@ -72,11 +72,72 @@ void exportText(char* arr, int size, const char* filename) {
     outfile.close(); //close the file
 }
 
+
 int main(int argc, char** argv) {
-    // TODO: Work to be done here
+    MPI_Init(NULL, NULL);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+    // Calculate the chunk size for each node
+    int chunkSize = arraySize / world_size;
+    // Create an array for each node to store its chunk
+    char* chunk = new char[chunkSize];
 
 
 
+    if (world_rank == 0) {
+        // Prompt the user to enter the decryption key (1-25)
+        do {
+            std::cout << "Enter the decryption key (1-25): ";
+
+            // Store user input
+            std::string input;
+            std::cin >> input;
+
+            // Check if the input is numeric
+            if (isdigit(input[0])) {
+                // Convert the inputted string to an integer
+                int numericKey = std::stoi(input);
+                if (numericKey >= 1 && numericKey <= 25) {
+                    key = numericKey;
+                }
+                else {
+                    std::cout << "Invalid key. Please enter a key in the range 1-25." << std::endl;
+                }
+            }
+            else {
+                std::cout << "Invalid key. Please enter a numeric key in the range 1-25." << std::endl;
+            }
+        } while (key < 1 || key > 25);
+
+       
+    }
+
+    // Broadcast the decryption key from Node 0 to all other nodes
+    MPI_Bcast(&key, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // Read the entire file on Node 
+    if (world_rank == 0) {
+        createData(world_rank);
+    }
+
+ 
+
+    // Scatter the data from Node 0 to all nodes
+    MPI_Scatter(totalArray, chunkSize, MPI_CHAR, chunk, chunkSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    // Decrypt the chunk
+    char* decipheredArray = decryptText(key, chunk, chunkSize);
+
+    // Output the deciphered array for each node
+    std::cout << "Node " << world_rank << "'s deciphered array: " << decipheredArray << std::endl;
+    printf(" ");
+
+    // Count occurrences of "DISTRIBUTED" in the decipheredArray
+    const char* searchString = "DISTRIBUTED";
+    int hits = searchText(decipheredArray, chunkSize, searchString);
+    std::cout << "Instances of  " << searchString << " found in node " << world_rank  << " is " << hits << std::endl;
+
+    MPI_Finalize();
+    return 0;
 }
-
-
