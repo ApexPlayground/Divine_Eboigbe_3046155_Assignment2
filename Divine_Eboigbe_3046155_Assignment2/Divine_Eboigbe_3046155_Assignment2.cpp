@@ -131,13 +131,49 @@ int main(int argc, char** argv) {
 
     // Output the deciphered array for each node
     std::cout << "Node " << world_rank << "'s deciphered array: " << decipheredArray << std::endl;
-    printf(" ");
+   
+    std::cout << " " << std::endl;
 
     // Count occurrences of "DISTRIBUTED" in the decipheredArray
     const char* searchString = "DISTRIBUTED";
     int hits = searchText(decipheredArray, chunkSize, searchString);
     std::cout << "Instances of  " << searchString << " found in node " << world_rank  << " is " << hits << std::endl;
 
+     std::cout << " " << std::endl;
+    //initialize totalhits
+    int totalhits = 0;
+
+    // Collect hits from all nodes on Node 3
+    MPI_Reduce(&hits, &totalhits, 1, MPI_INT, MPI_SUM, 3, MPI_COMM_WORLD);
+
+    
+    //Send totalhits info to node 2
+    if (world_rank == 3) {
+        MPI_Send(&totalhits, 1, MPI_INT, 2, 0, MPI_COMM_WORLD);
+    }
+
+    //Receive info from node 3 
+    int receivedTotalHits = 0;
+    if (world_rank == 2) {
+        MPI_Recv(&receivedTotalHits, 1, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::cout << "Distributed was found a total of " << receivedTotalHits << " times." << std::endl;
+    }
+
+    // Create an array to store the partial decrypted arrays
+    char* partialDecryptedArray = new char[chunkSize * world_size];
+
+    // Gather partial decrypted arrays from all nodes to Node 0
+    MPI_Gather(decipheredArray, chunkSize, MPI_CHAR, partialDecryptedArray, chunkSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (world_rank == 0) {
+        // Output the reconstructed array for Node 0
+        std::cout << "Node " << world_rank << "'s reconstructed array: " << partialDecryptedArray << std::endl;
+
+        std::cout << " " << std::endl;
+
+        // Export the reconstructed data to a file on Node 0
+        exportText(partialDecryptedArray, arraySize, "DivineDecryptedText.txt");
+    }
     MPI_Finalize();
     return 0;
 }
