@@ -1,6 +1,6 @@
 // Distributed Systems - 2023
 // Assignment 2 - template
-// TODO: Divine Eboigbe - 3046155
+//Divine Eboigbe - 3046155
 
 #include <iostream>
 #include <fstream>
@@ -86,6 +86,8 @@ int main(int argc, char** argv) {
 
 
     if (world_rank == 0) {
+        //Print Name
+        std::cout << "Divine Eboigbe - 3046155" << std::endl;
         // Prompt the user to enter the decryption key (1-25)
         do {
             std::cout << "Enter the decryption key (1-25): ";
@@ -110,7 +112,7 @@ int main(int argc, char** argv) {
             }
         } while (key < 1 || key > 25);
 
-       
+
     }
 
     // Broadcast the decryption key from Node 0 to all other nodes
@@ -126,9 +128,9 @@ int main(int argc, char** argv) {
     }
 
     //Barrier to synchronize processes
-     MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
- 
+
 
     // Scatter the data from Node 0 to all nodes
     MPI_Scatter(totalArray, chunkSize, MPI_CHAR, chunk, chunkSize, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -138,8 +140,8 @@ int main(int argc, char** argv) {
 
     // Output the deciphered array for each node
     std::cout << "Node " << world_rank << "'s deciphered array: " << decipheredArray << std::endl;
-   
-    std::cout << " " << std::endl;
+
+
 
     //Barrier to synchronize processes
     MPI_Barrier(MPI_COMM_WORLD);
@@ -148,18 +150,19 @@ int main(int argc, char** argv) {
     // Count occurrences of "DISTRIBUTED" in the decipheredArray
     const char* searchString = "DISTRIBUTED";
     int hits = searchText(decipheredArray, chunkSize, searchString);
-    std::cout << "Instances of  " << searchString << " found in node " << world_rank  << " is " << hits << std::endl;
+    std::cout << " " << std::endl;
+    std::cout << "Instances of  " << searchString << " found in node " << world_rank << " is " << hits << std::endl;
 
-     std::cout << " " << std::endl;
+    std::cout << " " << std::endl;
 
-     MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     //initialize totalhits
     int totalhits = 0;
 
     // Collect hits from all nodes on Node 3
     MPI_Reduce(&hits, &totalhits, 1, MPI_INT, MPI_SUM, 3, MPI_COMM_WORLD);
 
-    
+
     //Send totalhits info to node 2
     if (world_rank == 3) {
         MPI_Send(&totalhits, 1, MPI_INT, 2, 0, MPI_COMM_WORLD);
